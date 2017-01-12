@@ -7,8 +7,10 @@ import (
 	"github.com/admiralobvious/brevis/backend"
 	"github.com/admiralobvious/brevis/model"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"github.com/sandalwing/echo-logrusmiddleware"
 	"github.com/spf13/viper"
 )
 
@@ -96,12 +98,13 @@ func main() {
 	e := echo.New()
 
 	// Middleware
-	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"*"},
 		AllowMethods: []string{echo.GET, echo.HEAD, echo.POST},
 	}))
+	e.Logger = logrusmiddleware.Logger{Logger: log.StandardLogger()}
+	e.Use(logrusmiddleware.Hook())
 
 	// Routes
 	e.GET("/", root)
@@ -109,7 +112,7 @@ func main() {
 	e.POST("/shorten", shorten)
 	e.POST("/unshorten", unshorten)
 
-	addr := viper.GetString("address") + ":" + viper.GetString("port")
 	// Start server
+	addr := viper.GetString("address") + ":" + viper.GetString("port")
 	e.Logger.Fatal(e.Start(addr))
 }

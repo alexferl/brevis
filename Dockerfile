@@ -11,4 +11,4 @@ RUN go-wrapper install
 
 EXPOSE 1323
 
-CMD ["/go/bin/brevis"]
+CMD ["/go/bin/brevis", "--address", "0.0.0.0"]

@@ -1,10 +1,13 @@
 package main
 
 import (
+	"io/ioutil"
 	"os"
 
 	log "github.com/Sirupsen/logrus"
+	logrus_syslog "github.com/Sirupsen/logrus/hooks/syslog"
 	"github.com/spf13/viper"
+	"log/syslog"
 )
 
 // InitLogging initializes the logger based on the config
@@ -18,6 +21,16 @@ func InitLogging() {
 		log.SetOutput(os.Stdout)
 	case "stderr":
 		log.SetOutput(os.Stderr)
+	case "null":
+		log.SetOutput(ioutil.Discard)
+	case "syslog":
+		syslogAddr := viper.GetString("syslog-address")
+		hook, err := logrus_syslog.NewSyslogHook("udp", syslogAddr, syslog.LOG_INFO, "")
+		if err != nil {
+			log.Errorf("Unable to connect to syslog server:", err)
+		} else {
+			log.AddHook(hook)
+		}
 	default:
 		file, err := os.Create(logFile)
 		if err != nil {
