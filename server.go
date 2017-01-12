@@ -77,7 +77,7 @@ func redirect(c echo.Context) error {
 
 	if res.Url == "" {
 		m := fmt.Sprintf("id '%s' not found", id)
-		return c.JSON(http.StatusOK, Error{m})
+		return c.JSON(http.StatusNotFound, Error{m})
 	}
 
 	baseUrl := viper.GetString("base-url")
