@@ -1,91 +1,15 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
-
-	"github.com/admiralobvious/brevis/backend"
-	"github.com/admiralobvious/brevis/model"
+	"github.com/admiralobvious/brevis/handler"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/sandalwing/echo-logrusmiddleware"
 	"github.com/spf13/viper"
+	"github.com/admiralobvious/brevis/backend"
 )
-
-func root(c echo.Context) error {
-	return c.JSON(http.StatusOK, map[string]string{"message": "Brevis: URL shortener API"})
-}
-
-func shorten(c echo.Context) error {
-	b := viper.Get("backend").(backend.Backend)
-	um := &model.UrlMapping{}
-	if err := c.Bind(um); err != nil {
-		m := fmt.Sprint("Must provide a URL to shorten")
-		return c.JSON(http.StatusBadRequest, Error{m})
-	}
-
-	valid := IsValidUri(um.Url)
-	if !valid {
-		m := fmt.Sprintf("URL '%s' is not valid", um.Url)
-		return c.JSON(http.StatusBadRequest, Error{m})
-	}
-
-	su := model.NewShortUrl(um.Url)
-	err := b.Set(su)
-	if err != nil {
-		m := fmt.Sprintf("Error shortening URL '%s': %s", um.Url, err)
-		return c.JSON(http.StatusInternalServerError, Error{m})
-	}
-
-	baseUrl := viper.GetString("base-url")
-	su.ShortUrl = baseUrl + su.ShortUrl
-	return c.JSON(http.StatusOK, su)
-
-}
-
-func unshorten(c echo.Context) error {
-	b := viper.Get("backend").(backend.Backend)
-	um := &model.UrlMapping{}
-	if err := c.Bind(um); err != nil {
-		m := fmt.Sprint("Must provide an id to unshorten")
-		return c.JSON(http.StatusBadRequest, Error{m})
-	}
-
-	res, err := b.Get(um)
-	if err != nil {
-		m := fmt.Sprintf("id '%s' not found", um.ShortUrl)
-		return c.JSON(http.StatusNotFound, Error{m})
-	}
-
-	baseUrl := viper.GetString("base-url")
-	res.ShortUrl = baseUrl + res.ShortUrl
-	return c.JSON(http.StatusOK, res)
-}
-
-func redirect(c echo.Context) error {
-	id := c.Param("id")
-	b := viper.Get("backend").(backend.Backend)
-
-	um := &model.UrlMapping{}
-	um.ShortUrl = id
-
-	res, err := b.Get(um)
-	if err != nil {
-		m := fmt.Sprintf("Error getting id '%s': %v", id, err)
-		return c.JSON(http.StatusInternalServerError, Error{m})
-	}
-
-	if res.Url == "" {
-		m := fmt.Sprintf("id '%s' not found", id)
-		return c.JSON(http.StatusNotFound, Error{m})
-	}
-
-	baseUrl := viper.GetString("base-url")
-	res.ShortUrl = baseUrl + res.ShortUrl
-	return c.Redirect(301, res.Url)
-}
 
 func init() {
 	cnf := NewConfig()
@@ -106,11 +30,15 @@ func main() {
 	e.Logger = logrusmiddleware.Logger{Logger: log.StandardLogger()}
 	e.Use(logrusmiddleware.Hook())
 
+	b := viper.Get("backend").(backend.Backend)
+
+	h := &handler.Handler{Backend: b}
+
 	// Routes
-	e.GET("/", root)
-	e.GET("/:id", redirect)
-	e.POST("/shorten", shorten)
-	e.POST("/unshorten", unshorten)
+	e.GET("/", h.Root)
+	e.GET("/:id", h.Redirect)
+	e.POST("/shorten", h.Shorten)
+	e.POST("/unshorten", h.Unshorten)
 
 	// Start server
 	addr := viper.GetString("address") + ":" + viper.GetString("port")

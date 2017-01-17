@@ -14,7 +14,7 @@ import (
 )
 
 type MongoDBBackend struct {
-	session *mgo.Session
+	Session *mgo.Session
 	Uri     string
 }
 
@@ -30,9 +30,9 @@ func (mb *MongoDBBackend) Init() (err error) {
 	}
 
 	for {
-		mb.session, err = mgo.Dial(mb.Uri)
-		mb.session.SetSocketTimeout(time.Second * 3)
-		mb.session.SetSyncTimeout(time.Second * 3)
+		mb.Session, err = mgo.Dial(mb.Uri)
+		mb.Session.SetSocketTimeout(time.Second * 3)
+		mb.Session.SetSyncTimeout(time.Second * 3)
 
 		if err != nil {
 			d := b.Duration()
@@ -43,7 +43,7 @@ func (mb *MongoDBBackend) Init() (err error) {
 
 		b.Reset()
 
-		coll := mb.session.DB("brevis").C("urls")
+		coll := mb.Session.DB("brevis").C("urls")
 		if coll == nil {
 			m := fmt.Sprint("Error creating collection")
 			log.Error(m)
@@ -69,7 +69,7 @@ func (mb *MongoDBBackend) Init() (err error) {
 
 func (mb *MongoDBBackend) Get(mapping *model.UrlMapping) (*model.UrlMapping, error) {
 	result := model.UrlMapping{}
-	session := mb.session.Copy()
+	session := mb.Session.Copy()
 	defer session.Close()
 
 	pipeline := bson.M{
@@ -90,7 +90,7 @@ func (mb *MongoDBBackend) Get(mapping *model.UrlMapping) (*model.UrlMapping, err
 }
 
 func (mb *MongoDBBackend) Set(mapping *model.UrlMapping) error {
-	session := mb.session.Copy()
+	session := mb.Session.Copy()
 	defer session.Close()
 
 	err := session.DB("brevis").C("urls").Insert(mapping)

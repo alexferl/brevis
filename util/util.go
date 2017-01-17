@@ -1,11 +1,11 @@
-package main
+package util
 
 import (
 	"net/url"
 )
 
 // Error holds an error message
-type Error struct {
+type ErrorResponse struct {
 	Message string `json:"error"`
 }
 
