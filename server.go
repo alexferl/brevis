@@ -3,12 +3,13 @@ package main
 import (
 	"github.com/admiralobvious/brevis/handler"
 
-	log "github.com/Sirupsen/logrus"
+	"fmt"
+	"github.com/Sirupsen/logrus"
+	"github.com/admiralobvious/brevis/backend"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/sandalwing/echo-logrusmiddleware"
 	"github.com/spf13/viper"
-	"github.com/admiralobvious/brevis/backend"
 )
 
 func init() {
@@ -27,11 +28,13 @@ func main() {
 		AllowOrigins: []string{"*"},
 		AllowMethods: []string{echo.GET, echo.HEAD, echo.POST},
 	}))
-	e.Logger = logrusmiddleware.Logger{Logger: log.StandardLogger()}
-	e.Use(logrusmiddleware.Hook())
+
+	if !viper.GetBool("log-requests-disabled") {
+		e.Logger = logrusmiddleware.Logger{Logger: logrus.StandardLogger()}
+		e.Use(logrusmiddleware.Hook())
+	}
 
 	b := viper.Get("backend").(backend.Backend)
-
 	h := &handler.Handler{Backend: b}
 
 	// Routes

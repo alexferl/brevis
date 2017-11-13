@@ -7,7 +7,7 @@ import (
 
 	"github.com/admiralobvious/brevis/model"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/jpillora/backoff"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -36,7 +36,7 @@ func (mb *MongoDBBackend) Init() (err error) {
 
 		if err != nil {
 			d := b.Duration()
-			log.Errorf("%s, reconnecting in %s", err, d)
+			logrus.Errorf("%s, reconnecting in %s", err, d)
 			time.Sleep(d)
 			continue
 		}
@@ -46,7 +46,7 @@ func (mb *MongoDBBackend) Init() (err error) {
 		coll := mb.Session.DB("brevis").C("urls")
 		if coll == nil {
 			m := fmt.Sprint("Error creating collection")
-			log.Error(m)
+			logrus.Error(m)
 			return errors.New(m)
 		}
 
@@ -82,7 +82,7 @@ func (mb *MongoDBBackend) Get(mapping *model.UrlMapping) (*model.UrlMapping, err
 	err := session.DB("brevis").C("urls").Find(pipeline).One(&result)
 
 	if err != nil && err != mgo.ErrNotFound {
-		log.Errorf("Error searching: %s", err)
+		logrus.Errorf("Error searching: %s", err)
 		return nil, err
 	}
 
@@ -103,7 +103,7 @@ func (mb *MongoDBBackend) Set(mapping *model.UrlMapping) error {
 			mapping.ShortUrl = res.ShortUrl
 			return nil
 		}
-		log.Errorf("Error inserting: %s", err)
+		logrus.Errorf("Error inserting: %s", err)
 		return err
 	}
 

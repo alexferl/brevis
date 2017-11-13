@@ -4,10 +4,8 @@ import (
 	"io/ioutil"
 	"os"
 
-	log "github.com/Sirupsen/logrus"
-	logrus_syslog "github.com/Sirupsen/logrus/hooks/syslog"
+	"github.com/Sirupsen/logrus"
 	"github.com/spf13/viper"
-	"log/syslog"
 )
 
 // InitLogging initializes the logger based on the config
@@ -18,51 +16,43 @@ func InitLogging() {
 
 	switch logFile {
 	case "stdout":
-		log.SetOutput(os.Stdout)
+		logrus.SetOutput(os.Stdout)
 	case "stderr":
-		log.SetOutput(os.Stderr)
-	case "null":
-		log.SetOutput(ioutil.Discard)
-	case "syslog":
-		syslogAddr := viper.GetString("syslog-address")
-		hook, err := logrus_syslog.NewSyslogHook("udp", syslogAddr, syslog.LOG_INFO, "")
-		if err != nil {
-			log.Errorf("Unable to connect to syslog server:", err)
-		} else {
-			log.AddHook(hook)
-		}
+		logrus.SetOutput(os.Stderr)
+	case "off":
+		logrus.SetOutput(ioutil.Discard)
 	default:
 		file, err := os.Create(logFile)
 		if err != nil {
-			log.Warnf("Couldn't open log-file '%s', falling back to stdout: %v", logFile, err)
-			log.SetOutput(os.Stdout)
+			logrus.Warnf("Couldn't open log-file '%s', falling back to stdout: %v", logFile, err)
+			logrus.SetOutput(os.Stdout)
 		} else {
-			log.SetOutput(file)
+			logrus.SetOutput(file)
 		}
 
 	}
 
 	switch logFormat {
 	case "text":
-		log.SetFormatter(&log.TextFormatter{})
+		logrus.SetFormatter(&logrus.TextFormatter{})
 	case "json":
-		log.SetFormatter(&log.JSONFormatter{})
+		logrus.SetFormatter(&logrus.JSONFormatter{})
 	default:
-		log.Warnf("Unknown log-format '%s', falling back to 'text' format.", logFormat)
-		log.SetFormatter(&log.TextFormatter{})
+		logrus.Warnf("Unknown log-format '%s', falling back to 'text' format.", logFormat)
+		logrus.SetFormatter(&logrus.TextFormatter{})
 	}
 
 	switch logLevel {
 	case "debug":
-		log.SetLevel(log.DebugLevel)
+		logrus.SetLevel(logrus.DebugLevel)
 	case "info":
-		log.SetLevel(log.InfoLevel)
+		logrus.SetLevel(logrus.InfoLevel)
 	case "warning":
-		log.SetLevel(log.WarnLevel)
+		logrus.SetLevel(logrus.WarnLevel)
 	case "error":
-		log.SetLevel(log.ErrorLevel)
+		logrus.SetLevel(logrus.ErrorLevel)
 	default:
-		log.Warnf("Unknown log-level '%s', falling back to 'info' level.", logLevel)
-		log.SetLevel(log.InfoLevel)
+		logrus.Warnf("Unknown log-level '%s', falling back to 'info' level.", logLevel)
+		logrus.SetLevel(logrus.InfoLevel)
 	}
 }

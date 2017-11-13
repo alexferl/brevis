@@ -10,16 +10,16 @@ import (
 
 // Config holds all configuration for our program
 type Config struct {
-	Address        net.IP
-	Port           uint
-	BaseUrl        string
-	LogFile        string
-	LogFormat      string
-	LogLevel       string
-	LogRequests    bool
-	SyslogAddress  string
-	BackendType    string
-	MongoDBBackend MongoDBBackend
+	Address             net.IP
+	Port                uint
+	BaseUrl             string
+	LogFile             string
+	LogFormat           string
+	LogLevel            string
+	LogRequestsDisabled bool
+	SyslogAddress       string
+	BackendType         string
+	MongoDBBackend      MongoDBBackend
 }
 
 type MongoDBBackend struct {
@@ -29,15 +29,15 @@ type MongoDBBackend struct {
 // NewConfig creates a Config instance
 func NewConfig() *Config {
 	cnf := Config{
-		Address:       net.ParseIP("127.0.0.1"),
-		Port:          1323,
-		BaseUrl:       "http://localhost:1323/",
-		LogFile:       "stdout",
-		LogFormat:     "text",
-		LogLevel:      "info",
-		LogRequests:   true,
-		SyslogAddress: "127.0.0.1:514",
-		BackendType:   "mongodb",
+		Address:             net.ParseIP("127.0.0.1"),
+		Port:                1323,
+		BaseUrl:             "http://localhost:1323/",
+		LogFile:             "stdout",
+		LogFormat:           "text",
+		LogLevel:            "info",
+		LogRequestsDisabled: false,
+		SyslogAddress:       "127.0.0.1:514",
+		BackendType:         "mongodb",
 		MongoDBBackend: MongoDBBackend{
 			Uri: "mongodb://127.0.0.1",
 		},
@@ -51,15 +51,13 @@ func (cnf *Config) addFlags(fs *pflag.FlagSet) {
 	fs.UintVar(&cnf.Port, "port", cnf.Port, "The port to listen at.")
 	fs.StringVar(&cnf.BaseUrl, "base-url", cnf.BaseUrl, "Base URL to prefix short URLs with")
 	fs.StringVar(&cnf.LogFile, "log-file", cnf.LogFile, "The log file to write to. "+
-		"'stdout' means log to stdout, 'stderr' means log to stderr, 'syslog' logs to a syslog server "+
-		"and 'null' means discard log messages.")
+		"'stdout' means log to stdout, 'stderr' means log to stderr "+
+		"and 'off' means discard log messages.")
 	fs.StringVar(&cnf.LogFormat, "log-format", cnf.LogFormat,
 		"The log format. Valid format values are: text, json.")
 	fs.StringVar(&cnf.LogLevel, "log-level", cnf.LogLevel, "The granularity of log outputs. "+
 		"Valid log levels: debug, info, warning, error and critical.")
-	fs.BoolVar(&cnf.LogRequests, "log-requests", cnf.LogRequests, "Log HTTP requests.")
-	fs.StringVar(&cnf.SyslogAddress, "syslog-address", cnf.SyslogAddress,
-		"Address of the syslog server")
+	fs.BoolVar(&cnf.LogRequestsDisabled, "log-requests-disabled", cnf.LogRequestsDisabled, "Log HTTP requests.")
 	fs.StringVar(&cnf.BackendType, "backend-type", cnf.BackendType,
 		"Type of backend to use to store short URLs")
 	fs.StringVar(&cnf.MongoDBBackend.Uri, "backend-mongodb-uri", cnf.MongoDBBackend.Uri,
