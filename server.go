@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/admiralobvious/brevis/handler"
 
-	"fmt"
 	"github.com/Sirupsen/logrus"
 	"github.com/admiralobvious/brevis/backend"
 	"github.com/labstack/echo"
