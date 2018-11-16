@@ -4,9 +4,10 @@ import (
 	"github.com/admiralobvious/brevis/model"
 )
 
-// Backend a common interface for all backend
+// Backend a common interface for all backends
 type Backend interface {
 	Init() error
 	Get(*model.UrlMapping) (*model.UrlMapping, error)
 	Set(*model.UrlMapping) error
+	Update(*model.UrlMapping) error
 }

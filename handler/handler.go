@@ -9,3 +9,8 @@ type (
 		Backend backend.Backend
 	}
 )
+
+// Error holds an error message
+type ErrorResponse struct {
+	Message string `json:"error"`
+}

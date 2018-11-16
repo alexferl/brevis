@@ -22,6 +22,6 @@ _testmain.go
 *.exe
 *.test
 *.prof
-/brevis
+brevis
 /vendor/
 .idea

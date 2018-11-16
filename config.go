@@ -1,8 +1,10 @@
 package main
 
 import (
+	"github.com/labstack/gommon/log"
 	"net"
 	"strings"
+	"time"
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -17,13 +19,13 @@ type Config struct {
 	LogFormat           string
 	LogLevel            string
 	LogRequestsDisabled bool
-	SyslogAddress       string
 	BackendType         string
 	MongoDBBackend      MongoDBBackend
 }
 
 type MongoDBBackend struct {
-	Uri string
+	Timeout time.Duration
+	Uri     string
 }
 
 // NewConfig creates a Config instance
@@ -36,10 +38,10 @@ func NewConfig() *Config {
 		LogFormat:           "text",
 		LogLevel:            "info",
 		LogRequestsDisabled: false,
-		SyslogAddress:       "127.0.0.1:514",
 		BackendType:         "mongodb",
 		MongoDBBackend: MongoDBBackend{
-			Uri: "mongodb://127.0.0.1",
+			Timeout: time.Duration(5) * time.Second,
+			Uri:     "mongodb://127.0.0.1",
 		},
 	}
 	return &cnf
@@ -60,9 +62,10 @@ func (cnf *Config) addFlags(fs *pflag.FlagSet) {
 	fs.BoolVar(&cnf.LogRequestsDisabled, "log-requests-disabled", cnf.LogRequestsDisabled, "Log HTTP requests.")
 	fs.StringVar(&cnf.BackendType, "backend-type", cnf.BackendType,
 		"Type of backend to use to store short URLs")
+	fs.DurationVar(&cnf.MongoDBBackend.Timeout, "backend-mongodb-timeout", cnf.MongoDBBackend.Timeout,
+		"Timeout connecting/reading/writing to MongoDB")
 	fs.StringVar(&cnf.MongoDBBackend.Uri, "backend-mongodb-uri", cnf.MongoDBBackend.Uri,
 		"URI of the MongoDB server")
-
 }
 
 // wordSepNormalizeFunc changes all flags that contain "_" separators
@@ -86,6 +89,10 @@ func (cnf *Config) BindFlags() {
 	viper.AutomaticEnv()
 
 	b := BackendFactory()
-	b.Init()
+	err := b.Init()
+	if err != nil {
+		log.Fatalf("Error initialising backend: %v", err)
+	}
+
 	viper.Set("backend", b)
 }

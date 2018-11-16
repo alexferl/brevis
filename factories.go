@@ -5,20 +5,21 @@ import (
 
 	"github.com/admiralobvious/brevis/backend"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
 func BackendFactory() backend.Backend {
 	backendType := viper.GetString("backend-type")
+	mongoDBTimeout := viper.GetDuration("backend-mongodb-timeout")
 	mongoDBUri := viper.GetString("backend-mongodb-uri")
-	log.Debugf("Using '%s' backend", backendType)
+	logrus.Debugf("Using '%s' backend", backendType)
 
 	switch strings.ToLower(backendType) {
 	case "mongodb":
-		return backend.NewMongoDBBackend(mongoDBUri)
+		return backend.NewMongoDBBackend(mongoDBUri, mongoDBTimeout)
 	default:
-		log.Warningf("Unknown loader type '%s'. Falling back to 'MongoDB'", backendType)
-		return backend.NewMongoDBBackend(mongoDBUri)
+		logrus.Warningf("Unknown backend type '%s'. Falling back to 'mongodb'", backendType)
+		return backend.NewMongoDBBackend(mongoDBUri, mongoDBTimeout)
 	}
 }

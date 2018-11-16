@@ -3,11 +3,11 @@ package main
 import (
 	"github.com/admiralobvious/brevis/handler"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/admiralobvious/brevis/backend"
+	"github.com/bakatz/echo-logrusmiddleware"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
-	"github.com/sandalwing/echo-logrusmiddleware"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -25,7 +25,7 @@ func main() {
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"*"},
-		AllowMethods: []string{echo.GET, echo.HEAD, echo.POST},
+		AllowMethods: []string{echo.GET, echo.HEAD, echo.POST, echo.OPTIONS},
 	}))
 
 	if !viper.GetBool("log-requests-disabled") {
@@ -39,6 +39,7 @@ func main() {
 	// Routes
 	e.GET("/", h.Root)
 	e.GET("/:id", h.Redirect)
+	e.GET("/:id/stats", h.Stats)
 	e.POST("/shorten", h.Shorten)
 	e.POST("/unshorten", h.Unshorten)
 
