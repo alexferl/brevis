@@ -16,7 +16,7 @@ type UrlMapping struct {
 	ShortUrl       string        `json:"short_url" bson:"short_url"`
 	UniqueViews    uint64        `json:"unique_views" bson:"unique_views"`
 	Url            string        `json:"url" bson:"url"`
-	UrlHash        [32]byte      `json:"url_hash" bson:"url_hash"`
+	UrlHash        [32]byte      `json:"-" bson:"url_hash"`
 	Views          uint64        `json:"views" bson:"views"`
 	Meta           `bson:"-"`
 }
