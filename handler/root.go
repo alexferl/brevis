@@ -1,11 +1,13 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo"
 )
 
 func (h *Handler) Root(c echo.Context) error {
-	return c.JSON(http.StatusOK, map[string]string{"message": "Brevis: URL shortener API"})
+	m := fmt.Sprint("Brevis: URL shortener API")
+	return c.JSON(http.StatusOK, Response{Message: m})
 }

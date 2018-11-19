@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/labstack/gommon/log"
 	"net"
 	"strings"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -91,7 +91,7 @@ func (cnf *Config) BindFlags() {
 	b := BackendFactory()
 	err := b.Init()
 	if err != nil {
-		log.Fatalf("Error initialising backend: %v", err)
+		logrus.Fatalf("Error initialising backend: %v", err)
 	}
 
 	viper.Set("backend", b)

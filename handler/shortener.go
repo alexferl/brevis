@@ -24,17 +24,17 @@ func (h *Handler) Shorten(c echo.Context) error {
 	}
 
 	if len(um.Url) > 2048 {
-		m := fmt.Sprintf("url is too long, must be 2048 characters or less")
+		m := fmt.Sprintf("Url is too long, must be 2048 characters or less")
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Message: m})
 	}
 
 	valid := util.IsValidUri(um.Url)
 	if !valid {
-		m := fmt.Sprintf("url '%s' is not valid", um.Url)
+		m := fmt.Sprintf("Url is not valid")
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Message: m})
 	}
 
-	su := model.NewShortUrl(um.Url)
+	su := model.NewUrlMapping(um.Url)
 	err := h.Backend.Set(su)
 	if err != nil {
 		m := fmt.Sprintf("Error shortening url")
@@ -83,15 +83,16 @@ func (h *Handler) Redirect(c echo.Context) error {
 	}
 
 	if res.Url == "" {
-		m := fmt.Sprintf("id '%s' not found", id)
+		m := fmt.Sprintf("Id '%s' not found", id)
 		return c.JSON(http.StatusNotFound, ErrorResponse{Message: m})
 	}
 
-	uErr := h.Backend.Update(um)
-	if uErr != nil {
-		m := fmt.Sprintf("Error updating id '%s'", id)
-		return c.JSON(http.StatusInternalServerError, ErrorResponse{Message: m})
-	}
+	referer := c.Request().Referer()
+	accept := c.Request().Header.Get("Accept")
+	ua := c.Request().UserAgent()
+	visitor := fmt.Sprintf("%s|%s|%s", c.RealIP(), ua, accept)
+
+	h.Backend.Update(id, referer, visitor)
 
 	return c.Redirect(301, res.Url)
 }
@@ -100,13 +101,13 @@ func (h *Handler) Stats(c echo.Context) error {
 	id := c.Param("id")
 	um := &model.UrlMapping{ShortUrl: id}
 
-	res, err := h.Backend.Get(um)
+	res, err := h.Backend.GetStats(um)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, ErrorResponse{Message: err.Error()})
 	}
 
 	if res.ShortUrl == "" {
-		m := fmt.Sprintf("id '%s' not found", id)
+		m := fmt.Sprintf("Id '%s' not found", id)
 		return c.JSON(http.StatusNotFound, ErrorResponse{Message: m})
 	}
 

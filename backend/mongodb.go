@@ -16,6 +16,8 @@ import (
 
 const (
 	dbName   = "brevis"
+	metaColl = "meta"
+	refsColl = "referrers"
 	urlsColl = "urls"
 )
 
@@ -48,30 +50,9 @@ func (mb *MongoDBBackend) Init() (err error) {
 
 		b.Reset()
 
-		coll := mb.Session.DB(dbName).C(urlsColl)
-		if coll == nil {
-			m := fmt.Sprint("Error creating collection")
-			return errors.New(m)
-		}
-
-		urlIndex := mgo.Index{
-			Key:      []string{"url_hash"},
-			Unique:   true,
-			DropDups: true,
-		}
-		uErr := coll.EnsureIndex(urlIndex)
-		if uErr != nil {
-			return uErr
-		}
-
-		shortUrlIndex := mgo.Index{
-			Key:      []string{"short_url"},
-			Unique:   true,
-			DropDups: true,
-		}
-		sErr := coll.EnsureIndex(shortUrlIndex)
-		if sErr != nil {
-			return sErr
+		err := mb.createIndexes()
+		if err != nil {
+			return err
 		}
 
 		return nil
@@ -83,19 +64,45 @@ func (mb *MongoDBBackend) Get(mapping *model.UrlMapping) (*model.UrlMapping, err
 	defer session.Close()
 
 	result := model.UrlMapping{}
-
-	pipeline := bson.M{
-		"$or": []interface{}{
-			bson.M{"url_hash": util.GetSha256Hash(mapping.Url)},
-			bson.M{"short_url": mapping.ShortUrl},
-		},
-	}
-
-	err := session.DB(dbName).C(urlsColl).Find(pipeline).One(&result)
+	err := session.DB(dbName).C(urlsColl).Find(bson.M{"short_url": mapping.ShortUrl}).One(&result)
 	if err != nil && err != mgo.ErrNotFound {
 		logrus.Errorf("Error searching: %s", err)
 		return nil, err
 	}
+
+	return &result, nil
+}
+
+func (mb *MongoDBBackend) GetStats(mapping *model.UrlMapping) (*model.UrlMapping, error) {
+	session := mb.Session.Copy()
+	defer session.Close()
+
+	db := session.DB(dbName)
+	query := bson.M{"short_url": mapping.ShortUrl}
+
+	var result model.UrlMapping
+	err := db.C(urlsColl).Find(query).One(&result)
+	if err != nil && err != mgo.ErrNotFound {
+		logrus.Errorf("Error searching url mapping: %s", err)
+		return nil, err
+	}
+
+	var meta model.Meta
+	err = db.C(metaColl).Find(query).One(&meta)
+	if err != nil && err != mgo.ErrNotFound {
+		logrus.Errorf("Error searching meta: %s", err)
+		return nil, err
+	}
+
+	var referrers []model.Referer
+	err = db.C(refsColl).Find(query).All(&referrers)
+	if err != nil && err != mgo.ErrNotFound {
+		logrus.Errorf("Error searching referrers: %s", err)
+		return nil, err
+	}
+
+	meta.Referrers = referrers
+	result.Meta = meta
 
 	return &result, nil
 }
@@ -115,25 +122,130 @@ func (mb *MongoDBBackend) Set(mapping *model.UrlMapping) error {
 			mapping.ShortUrl = res.ShortUrl
 			return nil
 		}
-		logrus.Errorf("Error inserting: %s", err)
+		logrus.Errorf("Error inserting url mapping: %s", err)
 		return err
 	}
 
 	return nil
 }
 
-func (mb *MongoDBBackend) Update(mapping *model.UrlMapping) error {
+func (mb *MongoDBBackend) Update(shortUrl, referer, visitor string) error {
 	session := mb.Session.Copy()
 	defer session.Close()
 
-	var result bson.M
-	change := mgo.Change{
-		Update: bson.M{"$inc": bson.M{"views": 1}, "$set": bson.M{"last_accessed_at": time.Now().UTC()}},
-	}
-	_, err := session.DB(dbName).C(urlsColl).Find(bson.M{"short_url": mapping.ShortUrl}).Apply(change, &result)
+	db := session.DB(dbName)
+	query := bson.M{"short_url": shortUrl}
 
+	var doc model.UrlMapping
+	change := mgo.Change{
+		Update: bson.M{
+			"$inc": bson.M{"views": 1},
+			"$set": bson.M{"last_accessed_at": time.Now().UTC()}},
+		ReturnNew: true,
+	}
+	_, err := db.C(urlsColl).Find(query).Apply(change, &doc)
 	if err != nil {
-		logrus.Errorf("Error updating: %s", err)
+		logrus.Errorf("Error updating url mapping: %s", err)
+		return err
+	}
+
+	var ref model.Referer
+	change = mgo.Change{
+		Update: bson.M{
+			"$inc": bson.M{"visits": 1},
+			"$set": bson.M{"last_visit_at": time.Now().UTC()},
+			"$setOnInsert": bson.M{
+				"first_visit_at": time.Now().UTC(),
+				"address":        referer,
+				"address_hash":   util.GetSha256Hash(referer)}},
+		Upsert: true,
+	}
+	_, err = db.C(refsColl).Find(bson.M{
+		"short_url":    shortUrl,
+		"address_hash": util.GetSha256Hash(referer)}).Apply(change, &ref)
+	if err != nil {
+		logrus.Errorf("Error updating referer: %s", err)
+		return err
+	}
+
+	var meta model.Meta
+	change = mgo.Change{
+		Update: bson.M{
+			"$addToSet": bson.M{"visitors": util.GetSha256Hash(visitor)},
+			"$set":      bson.M{"last_updated_at": time.Now().UTC()}},
+		Upsert:    true,
+		ReturnNew: true,
+	}
+	_, err = db.C(metaColl).Find(query).Apply(change, &meta)
+	if err != nil {
+		logrus.Errorf("Error updating meta: %s", err)
+		return err
+	}
+
+	change = mgo.Change{
+		Update:    bson.M{"$set": bson.M{"unique_views": uint64(len(meta.Visitors))}},
+		ReturnNew: true,
+	}
+	_, err = db.C(urlsColl).Find(query).Apply(change, &doc)
+	if err != nil {
+		logrus.Errorf("Error updating unique views: %s", err)
+		return err
+	}
+
+	return nil
+}
+
+func (mb *MongoDBBackend) createIndexes() error {
+	session := mb.Session.Copy()
+	defer session.Close()
+
+	db := mb.Session.DB(dbName)
+
+	// urls
+	urlColl := db.C(urlsColl)
+	if urlColl == nil {
+		m := fmt.Sprint("Error creating urls collection")
+		return errors.New(m)
+	}
+
+	err := urlColl.EnsureIndex(mgo.Index{
+		Key:      []string{"short_url"},
+		Unique:   true,
+		DropDups: true,
+	})
+	if err != nil {
+		return err
+	}
+
+	// meta
+	metaColl := db.C(metaColl)
+	if metaColl == nil {
+		m := fmt.Sprint("Error creating meta collection")
+		return errors.New(m)
+	}
+
+	err = metaColl.EnsureIndex(mgo.Index{
+		Key:      []string{"short_url"},
+		Unique:   true,
+		DropDups: true,
+	})
+	if err != nil {
+		return err
+	}
+
+	// referrers
+	refColl := db.C(refsColl)
+	if refColl == nil {
+		m := fmt.Sprint("Error creating referrers collection")
+		return errors.New(m)
+	}
+
+	err = refColl.EnsureIndex(mgo.Index{
+		Key:      []string{"short_url", "address_hash"},
+		Unique:   true,
+		DropDups: true,
+	})
+	if err != nil {
 		return err
 	}
 

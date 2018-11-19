@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/admiralobvious/brevis/backend"
 	"github.com/admiralobvious/brevis/handler"
 
-	"github.com/admiralobvious/brevis/backend"
 	"github.com/bakatz/echo-logrusmiddleware"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
