@@ -24,6 +24,7 @@ type UrlMapping struct {
 func NewUrlMapping(url string) *UrlMapping {
 	now := time.Now().UTC()
 	return &UrlMapping{
+		Id:        bson.NewObjectId(),
 		CreatedAt: &now,
 		ShortUrl:  token.New().Encode(),
 		Url:       url,
