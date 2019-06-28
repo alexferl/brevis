@@ -1,7 +1,7 @@
 package backend
 
 import (
-	"github.com/admiralobvious/brevis/model"
+	"brevis/model"
 )
 
 // Backend a common interface for all backends

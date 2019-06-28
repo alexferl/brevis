@@ -1,4 +1,4 @@
-FROM golang:1.11.2-alpine as builder
+FROM golang:1.12.6-alpine as builder
 MAINTAINER Alexandre Ferland <aferlandqc@gmail.com>
 
 ENV GO111MODULE=on
@@ -18,5 +18,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build
 
 FROM scratch
 COPY --from=builder /build/brevis /brevis
+
 EXPOSE 1323
+
 ENTRYPOINT ["/brevis", "--address", "0.0.0.0"]

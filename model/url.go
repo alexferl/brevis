@@ -3,10 +3,10 @@ package model
 import (
 	"time"
 
-	"github.com/admiralobvious/brevis/util"
-
 	"github.com/globalsign/mgo/bson"
 	"github.com/marksalpeter/token"
+
+	"brevis/util"
 )
 
 type UrlMapping struct {

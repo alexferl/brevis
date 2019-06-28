@@ -3,10 +3,10 @@ package main
 import (
 	"strings"
 
-	"github.com/admiralobvious/brevis/backend"
-
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+
+	"brevis/backend"
 )
 
 func BackendFactory() backend.Backend {

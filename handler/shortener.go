@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/admiralobvious/brevis/model"
-	"github.com/admiralobvious/brevis/util"
-
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
+
+	"brevis/model"
+	"brevis/util"
 )
 
 func (h *Handler) Shorten(c echo.Context) error {

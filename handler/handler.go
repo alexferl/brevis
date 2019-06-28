@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/admiralobvious/brevis/backend"
+	"brevis/backend"
 )
 
 type (

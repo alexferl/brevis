@@ -1,14 +1,14 @@
 package main
 
 import (
-	"github.com/admiralobvious/brevis/backend"
-	"github.com/admiralobvious/brevis/handler"
-
-	"github.com/bakatz/echo-logrusmiddleware"
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
+	"github.com/admiralobvious/echo-logrusmiddleware"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+
+	"brevis/backend"
+	"brevis/handler"
 )
 
 func init() {

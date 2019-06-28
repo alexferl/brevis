@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/admiralobvious/brevis/model"
-	"github.com/admiralobvious/brevis/util"
-
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/jpillora/backoff"
 	"github.com/sirupsen/logrus"
+
+	"brevis/model"
+	"brevis/util"
 )
 
 const (
