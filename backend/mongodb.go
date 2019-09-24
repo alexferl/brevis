@@ -29,8 +29,10 @@ type MongoDBBackend struct {
 	Uri     string
 }
 
-func NewMongoDBBackend(uri string, timeout time.Duration) Backend {
+func NewMongoDBBackend(uri string, timeout time.Duration, username, password string) Backend {
 	return Backend(&MongoDBBackend{
+		Username: username,
+		Password: password,
 		Timeout: timeout,
 		Uri:     uri,
 	})
