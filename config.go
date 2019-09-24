@@ -24,6 +24,8 @@ type Config struct {
 }
 
 type MongoDBBackend struct {
+	Username string
+	Password string
 	Timeout time.Duration
 	Uri     string
 }
@@ -40,6 +42,8 @@ func NewConfig() *Config {
 		LogRequestsDisabled: false,
 		BackendType:         "mongodb",
 		MongoDBBackend: MongoDBBackend{
+			Username: "",
+			Password: "",
 			Timeout: time.Duration(5) * time.Second,
 			Uri:     "mongodb://127.0.0.1",
 		},
@@ -62,6 +66,10 @@ func (cnf *Config) addFlags(fs *pflag.FlagSet) {
 	fs.BoolVar(&cnf.LogRequestsDisabled, "log-requests-disabled", cnf.LogRequestsDisabled, "Log HTTP requests.")
 	fs.StringVar(&cnf.BackendType, "backend-type", cnf.BackendType,
 		"Type of backend to use to store short URLs")
+	fs.StringVar(&cnf.MongoDBBackend.Username, "backend-mongodb-username", cnf.MongoDBBackend.Username,
+		"MongoDB username")
+	fs.StringVar(&cnf.MongoDBBackend.Password, "backend-mongodb-password", cnf.MongoDBBackend.Password,
+		"MongoDB password")
 	fs.DurationVar(&cnf.MongoDBBackend.Timeout, "backend-mongodb-timeout", cnf.MongoDBBackend.Timeout,
 		"Timeout connecting/reading/writing to MongoDB")
 	fs.StringVar(&cnf.MongoDBBackend.Uri, "backend-mongodb-uri", cnf.MongoDBBackend.Uri,

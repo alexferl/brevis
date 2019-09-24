@@ -22,6 +22,8 @@ const (
 )
 
 type MongoDBBackend struct {
+	Username string
+	Password string
 	Session *mgo.Session
 	Timeout time.Duration
 	Uri     string
@@ -41,6 +43,10 @@ func (mb *MongoDBBackend) Init() (err error) {
 
 	for {
 		mb.Session, err = mgo.DialWithTimeout(mb.Uri, mb.Timeout)
+		if mb.Username != "" && mb.Password != "" {
+			creds := mgo.Credential{Username: mb.Username, Password: mb.Password}
+			err = mb.Session.Login(&creds)
+		}
 		if err != nil {
 			d := b.Duration()
 			logrus.Errorf("%s, reconnecting in %s", err, d)
