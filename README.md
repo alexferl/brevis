@@ -12,7 +12,7 @@ go build ./cmd/brevis && ./brevis
 ### Usage
 ```shell script
 Usage of ./brevis:
-      --app-name string                     The name of the application.Used to prefix environment variables. (default "app")
+      --app-name string                     The name of the application. Used to prefix environment variables. (default "brevis")
       --base-url string                     Base URL to prefix short URLs with (default "http://localhost:1323/")
       --bind-address ip                     The IP address to listen at. (default 127.0.0.1)
       --bind-port uint                      The port to listen at. (default 1323)
