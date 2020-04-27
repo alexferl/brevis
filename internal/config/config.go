@@ -40,7 +40,7 @@ type MongoDatabase struct {
 // NewConfig creates a Config instance
 func NewConfig() *Config {
 	cnf := Config{
-		AppName:             "app",
+		AppName:             "brevis",
 		EnvName:             "local",
 		BindAddress:         net.ParseIP("127.0.0.1"),
 		BindPort:            1323,
@@ -78,7 +78,7 @@ func NewConfig() *Config {
 
 // addFlags adds all the flags from the command line
 func (cnf *Config) addFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&cnf.AppName, "app-name", cnf.AppName, "The name of the application."+
+	fs.StringVar(&cnf.AppName, "app-name", cnf.AppName, "The name of the application. "+
 		"Used to prefix environment variables.")
 	fs.StringVar(&cnf.EnvName, "env-name", cnf.EnvName, "The environment of the application. "+
 		"Used to load the right config file.")
@@ -95,7 +95,7 @@ func (cnf *Config) addFlags(fs *pflag.FlagSet) {
 	fs.BoolVar(&cnf.LogRequestsDisabled, "log-requests-disabled", cnf.LogRequestsDisabled,
 		"Disables HTTP requests logging.")
 	fs.StringSliceVar(&cnf.CORS.AllowOrigins, "cors-allow-origins", cnf.CORS.AllowOrigins,
-		"Indicates whether the response can be shared with requesting code from the given origin")
+		"Indicates whether the response can be shared with requesting code from the given origin.")
 	fs.StringSliceVar(&cnf.CORS.AllowMethods, "cors-allow-methods", cnf.CORS.AllowMethods,
 		"Indicates which HTTP methods are allowed for cross-origin requests.")
 	fs.StringSliceVar(&cnf.CORS.AllowHeaders, "cors-allow-headers", cnf.CORS.AllowHeaders,
@@ -107,17 +107,17 @@ func (cnf *Config) addFlags(fs *pflag.FlagSet) {
 		"Indicates which headers can be exposed as part of the response by listing their name.")
 	fs.IntVar(&cnf.CORS.MaxAge, "cors-max-age", cnf.CORS.MaxAge,
 		"Indicates how long the results of a preflight request can be cached.")
-	fs.StringVar(&cnf.BaseUrl, "base-url", cnf.BaseUrl, "Base URL to prefix short URLs with")
+	fs.StringVar(&cnf.BaseUrl, "base-url", cnf.BaseUrl, "Base URL to prefix short URLs with.")
 	fs.StringVar(&cnf.DatabaseType, "database-type", cnf.DatabaseType,
-		"Type of database to use to store short URLs")
+		"Type of database to use to store short URLs.")
 	fs.StringVar(&cnf.MongoDatabase.Username, "database-mongodb-username", cnf.MongoDatabase.Username,
-		"MongoDB username")
+		"MongoDB username.")
 	fs.StringVar(&cnf.MongoDatabase.Password, "database-mongodb-password", cnf.MongoDatabase.Password,
-		"MongoDB password")
+		"MongoDB password.")
 	fs.DurationVar(&cnf.MongoDatabase.Timeout, "database-mongodb-timeout", cnf.MongoDatabase.Timeout,
-		"Timeout connecting/reading/writing to MongoDB")
+		"Timeout connecting/reading/writing to MongoDB.")
 	fs.StringVar(&cnf.MongoDatabase.Uri, "database-mongodb-uri", cnf.MongoDatabase.Uri,
-		"URI of the MongoDB server")
+		"URI of the MongoDB server.")
 }
 
 // wordSepNormalizeFunc changes all flags that contain "_" separators
