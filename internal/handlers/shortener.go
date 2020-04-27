@@ -1,4 +1,4 @@
-package handler
+package handlers
 
 import (
 	"fmt"
@@ -7,8 +7,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 
-	"brevis/model"
-	"brevis/util"
+	"github.com/admiralobvious/brevis/internal/model"
+	"github.com/admiralobvious/brevis/internal/util"
 )
 
 func (h *Handler) Shorten(c echo.Context) error {
@@ -35,7 +35,7 @@ func (h *Handler) Shorten(c echo.Context) error {
 	}
 
 	su := model.NewUrlMapping(um.Url)
-	err := h.Backend.Set(su)
+	err := h.Database.Set(su)
 	if err != nil {
 		m := fmt.Sprintf("Error shortening url")
 		return c.JSON(http.StatusInternalServerError, ErrorResponse{Message: m})
@@ -58,7 +58,7 @@ func (h *Handler) Unshorten(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Message: m})
 	}
 
-	res, err := h.Backend.Get(um)
+	res, err := h.Database.Get(um)
 	if err != nil {
 		m := fmt.Sprintf("Error getting short_url")
 		return c.JSON(http.StatusInternalServerError, ErrorResponse{Message: m})
@@ -76,7 +76,7 @@ func (h *Handler) Redirect(c echo.Context) error {
 	id := c.Param("id")
 	um := &model.UrlMapping{ShortUrl: id}
 
-	res, err := h.Backend.Get(um)
+	res, err := h.Database.Get(um)
 	if err != nil {
 		m := fmt.Sprintf("Error getting id '%s'", id)
 		return c.JSON(http.StatusInternalServerError, ErrorResponse{Message: m})
@@ -92,7 +92,7 @@ func (h *Handler) Redirect(c echo.Context) error {
 	ua := c.Request().UserAgent()
 	visitor := fmt.Sprintf("%s|%s|%s", c.RealIP(), ua, accept)
 
-	h.Backend.Update(id, referer, visitor)
+	h.Database.Update(id, referer, visitor)
 
 	return c.Redirect(301, res.Url)
 }
@@ -101,7 +101,7 @@ func (h *Handler) Stats(c echo.Context) error {
 	id := c.Param("id")
 	um := &model.UrlMapping{ShortUrl: id}
 
-	res, err := h.Backend.GetStats(um)
+	res, err := h.Database.GetStats(um)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, ErrorResponse{Message: err.Error()})
 	}

@@ -1,4 +1,4 @@
-package main
+package logging
 
 import (
 	"io/ioutil"
@@ -19,7 +19,7 @@ func InitLogging() {
 		logrus.SetOutput(os.Stdout)
 	case "stderr":
 		logrus.SetOutput(os.Stderr)
-	case "off":
+	case "null":
 		logrus.SetOutput(ioutil.Discard)
 	default:
 		file, err := os.Create(logFile)

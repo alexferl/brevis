@@ -1,11 +1,11 @@
-package backend
+package db
 
 import (
-	"brevis/model"
+	"github.com/admiralobvious/brevis/internal/model"
 )
 
-// Backend a common interface for all backends
-type Backend interface {
+// Database a common interface for all databases
+type Database interface {
 	Init() error
 	Get(*model.UrlMapping) (*model.UrlMapping, error)
 	GetStats(*model.UrlMapping) (*model.UrlMapping, error)

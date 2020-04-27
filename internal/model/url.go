@@ -6,7 +6,7 @@ import (
 	"github.com/globalsign/mgo/bson"
 	"github.com/marksalpeter/token"
 
-	"brevis/util"
+	"github.com/admiralobvious/brevis/internal/util"
 )
 
 type UrlMapping struct {

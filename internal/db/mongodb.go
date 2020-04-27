@@ -1,4 +1,4 @@
-package backend
+package db
 
 import (
 	"errors"
@@ -10,8 +10,8 @@ import (
 	"github.com/jpillora/backoff"
 	"github.com/sirupsen/logrus"
 
-	"brevis/model"
-	"brevis/util"
+	"github.com/admiralobvious/brevis/internal/model"
+	"github.com/admiralobvious/brevis/internal/util"
 )
 
 const (
@@ -21,33 +21,33 @@ const (
 	urlsColl = "urls"
 )
 
-type MongoDBBackend struct {
+type MongoDatabase struct {
 	Username string
 	Password string
-	Session *mgo.Session
-	Timeout time.Duration
-	Uri     string
+	Session  *mgo.Session
+	Timeout  time.Duration
+	Uri      string
 }
 
-func NewMongoDBBackend(uri string, timeout time.Duration, username, password string) Backend {
-	return Backend(&MongoDBBackend{
+func NewMongoDatabase(uri string, timeout time.Duration, username, password string) Database {
+	return Database(&MongoDatabase{
 		Username: username,
 		Password: password,
-		Timeout: timeout,
-		Uri:     uri,
+		Timeout:  timeout,
+		Uri:      uri,
 	})
 }
 
-func (mb *MongoDBBackend) Init() (err error) {
+func (md *MongoDatabase) Init() (err error) {
 	b := &backoff.Backoff{
 		Jitter: true,
 	}
 
 	for {
-		mb.Session, err = mgo.DialWithTimeout(mb.Uri, mb.Timeout)
-		if mb.Username != "" && mb.Password != "" {
-			creds := mgo.Credential{Username: mb.Username, Password: mb.Password}
-			err = mb.Session.Login(&creds)
+		md.Session, err = mgo.DialWithTimeout(md.Uri, md.Timeout)
+		if md.Username != "" && md.Password != "" {
+			creds := mgo.Credential{Username: md.Username, Password: md.Password}
+			err = md.Session.Login(&creds)
 		}
 		if err != nil {
 			d := b.Duration()
@@ -58,7 +58,7 @@ func (mb *MongoDBBackend) Init() (err error) {
 
 		b.Reset()
 
-		err := mb.createIndexes()
+		err := md.createIndexes()
 		if err != nil {
 			return err
 		}
@@ -67,8 +67,8 @@ func (mb *MongoDBBackend) Init() (err error) {
 	}
 }
 
-func (mb *MongoDBBackend) Get(mapping *model.UrlMapping) (*model.UrlMapping, error) {
-	session := mb.Session.Copy()
+func (md *MongoDatabase) Get(mapping *model.UrlMapping) (*model.UrlMapping, error) {
+	session := md.Session.Copy()
 	defer session.Close()
 
 	result := model.UrlMapping{}
@@ -81,8 +81,8 @@ func (mb *MongoDBBackend) Get(mapping *model.UrlMapping) (*model.UrlMapping, err
 	return &result, nil
 }
 
-func (mb *MongoDBBackend) GetStats(mapping *model.UrlMapping) (*model.UrlMapping, error) {
-	session := mb.Session.Copy()
+func (md *MongoDatabase) GetStats(mapping *model.UrlMapping) (*model.UrlMapping, error) {
+	session := md.Session.Copy()
 	defer session.Close()
 
 	db := session.DB(dbName)
@@ -115,14 +115,14 @@ func (mb *MongoDBBackend) GetStats(mapping *model.UrlMapping) (*model.UrlMapping
 	return &result, nil
 }
 
-func (mb *MongoDBBackend) Set(mapping *model.UrlMapping) error {
-	session := mb.Session.Copy()
+func (md *MongoDatabase) Set(mapping *model.UrlMapping) error {
+	session := md.Session.Copy()
 	defer session.Close()
 
 	err := session.DB(dbName).C(urlsColl).Insert(mapping)
 	if err != nil {
 		if mgo.IsDup(err) {
-			res, err := mb.Get(mapping)
+			res, err := md.Get(mapping)
 			if err != nil {
 				logrus.Errorf("Error getting result: %s", err)
 				return err
@@ -137,8 +137,8 @@ func (mb *MongoDBBackend) Set(mapping *model.UrlMapping) error {
 	return nil
 }
 
-func (mb *MongoDBBackend) Update(shortUrl, referer, visitor string) error {
-	session := mb.Session.Copy()
+func (md *MongoDatabase) Update(shortUrl, referer, visitor string) error {
+	session := md.Session.Copy()
 	defer session.Close()
 
 	db := session.DB(dbName)
@@ -203,11 +203,11 @@ func (mb *MongoDBBackend) Update(shortUrl, referer, visitor string) error {
 	return nil
 }
 
-func (mb *MongoDBBackend) createIndexes() error {
-	session := mb.Session.Copy()
+func (md *MongoDatabase) createIndexes() error {
+	session := md.Session.Copy()
 	defer session.Close()
 
-	db := mb.Session.DB(dbName)
+	db := md.Session.DB(dbName)
 
 	// urls
 	urlColl := db.C(urlsColl)
