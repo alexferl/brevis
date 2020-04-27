@@ -94,3 +94,11 @@ docker build -t brevis .
 You will probably need to add the relevant settings for MongoDB as well.
 1. Build your own docker image.
 1. Deploy!
+
+### Kubernetes
+If you're using Kubernetes, you can use the exising [image](https://hub.docker.com/repository/docker/admiralobvious/brevis) and you just have to set the environment variables in your manifest:
+```yaml
+env:
+- name: BREVIS_BASE_URL
+  value: https://u.mydomain.com/
+```
